@@ -9,10 +9,10 @@ namespace Kiraio.LoveL2D
         const string VERSION = "1.0.0";
         const string LIVE2D_CUBISM_MAIN = "Live2D_Cubism.jar";
         static readonly string LIVE2D_CUBISM_PACKAGE = Utils.NormalizePath("com/live2d/cubism");
-        static string CEAppDef_CLASS = "g.class"; // Will be combined with LIVE2D_CUBISM_PACKAGE later
+        static string CEAppDef_CLASS = "h.class"; // Will be combined with LIVE2D_CUBISM_PACKAGE later
         static string APP_LIB_PATH = Utils.NormalizePath("app/lib");
         const string MOD_LIB_PATH = "lib";
-        readonly static string RLM = "rlm1501.jar";
+        readonly static string RLM = "rlm1603.jar";
 
         static void Main(string[] args)
         {
@@ -97,29 +97,29 @@ namespace Kiraio.LoveL2D
 
                 /*
                 * Extracting .jar file in a non case-sensitive file system causing problem
-                * like they didn't treat (e.g. "G.class" and "g.class") files as different file,
+                * like they didn't treat (e.g. "H.class" and "h.class") files as different file,
                 * so they overwrite each other.
                 * To tackle this, we need to handle this in memory.
                 */
-                // Extract "g.class" then modify the SHA-256 hash.
-                string modGClass = Utils.ExtractZipEntry(live2dMain, CEAppDef_CLASS);
-                modGClass = Utils.ReplaceStringInBinaryFile(
-                    modGClass,
-                    $"{modGClass}.mod",
+                // Extract "h.class" then modify the SHA-256 hash.
+                string modHashClass = Utils.ExtractZipEntry(live2dMain, CEAppDef_CLASS);
+                modHashClass = Utils.ReplaceStringInBinaryFile(
+                    modHashClass,
+                    $"{modHashClass}.mod",
                     oldRlmHash,
                     newRlmHash
                 );
 
                 // Store modified contents into a list
                 List<(string, byte[])> modifiedFiles =
-                    new() { (CEAppDef_CLASS, File.ReadAllBytes(modGClass)) };
+                    new() { (CEAppDef_CLASS, File.ReadAllBytes(modHashClass)) };
                 // Ignore these files to bypass jar signing
                 List<string> ignoredFiles =
                     new()
                     {
                         Utils.NormalizePath("META-INF/MANIFEST.MF"),
-                        Utils.NormalizePath("META-INF/TE-D8685.RSA"),
-                        Utils.NormalizePath("META-INF/TE-D8685.SF")
+                        Utils.NormalizePath("META-INF/GMO-CODE.RSA"),
+                        Utils.NormalizePath("META-INF/GMO-CODE.SF")
                     };
 
                 Utils.ModifyZipContents(live2dMain, live2dMain, modifiedFiles, ignoredFiles);
@@ -155,12 +155,12 @@ namespace Kiraio.LoveL2D
                     File.Move(rlmBackup, rlmPath, true);
                 }
 
-                string gClassRootDirectory = Path.Combine(
+                string hashClassRootDirectory = Path.Combine(
                     APP_LIB_PATH,
                     CEAppDef_CLASS.Split(Path.DirectorySeparatorChar)[0]
                 );
-                if (Directory.Exists(gClassRootDirectory))
-                    Directory.Delete(gClassRootDirectory, true);
+                if (Directory.Exists(hashClassRootDirectory))
+                    Directory.Delete(hashClassRootDirectory, true);
             }
 
             Revoke:

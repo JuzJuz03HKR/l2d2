@@ -29,37 +29,46 @@ done
 echo "Build process completed for all target OS architectures."
 
 SOURCE_DIR="src/rlm1501/sources/com/reprisesoftware/rlm"
-OUTPUT_DIR="bin/Release/rlm1501"
-OUTPUT_JAR="bin/Release/rlm1501/rlm1501.jar"
+STAGING_DIR="bin/Release/rlm1603/staging"
+OUTPUT_DIR="bin/Release/rlm1603"
+OUTPUT_JAR="bin/Release/rlm1603/rlm1603.jar"
 
-# Create the output directory if it doesn't exist
-mkdir -p "${OUTPUT_DIR}"
+# Create a clean staging directory to compile Java classes into
+rm -rf "${STAGING_DIR}"
+mkdir -p "${STAGING_DIR}"
 
 # Compile Java classes
-echo "Building rlm1501..."
-javac -d "${OUTPUT_DIR}" "${SOURCE_DIR}"/*.java -Xlint:unchecked
-echo "Successfully build rlm1501."
+# NOTE: Must target Java 8 (or lower) since Live2D Cubism 5.3 bundles JRE 17;
+# compiling with a newer javac default would produce UnsupportedClassVersionError.
+echo "Building rlm1603..."
+javac --release 8 -d "${STAGING_DIR}" "${SOURCE_DIR}"/*.java -Xlint:unchecked
+echo "Successfully build rlm1603."
 
 # Check if compilation was successful
 if [ $? -eq 0 ]; then
-    # Create JAR file
-    echo "Packing rlm1501 as .jar..."
-    jar cf "${OUTPUT_JAR}" -C "${OUTPUT_DIR}" .
+    # Create JAR file from staged classes only (avoid packing the jar into itself)
+    echo "Packing rlm1603 as .jar..."
+    rm -f "${OUTPUT_JAR}"
+    jar cf "${OUTPUT_JAR}" -C "${STAGING_DIR}" .
     echo "JAR file '${OUTPUT_JAR}' created successfully."
 else
     echo "Packing failed. JAR file not created."
 fi
 
-# Create "lib" directory to store modified "rlm1501.jar"
-echo "Distributing rlm1501.jar for every architecture..."
+# Create "lib" directory to store modified "rlm1603.jar"
+echo "Distributing rlm1603.jar for every architecture..."
 for framework in "${TARGET_FRAMEWORKS[@]}"
 do
     for os_arch in "${TARGET_OS_ARCHITECTURES[@]}"
     do
-        # Copy lrm1501.jar to every architecture
+        # Copy rlm1603.jar to every architecture
         LIB_PATH="bin/Release/${framework}/${os_arch}/publish/lib"
         mkdir -p "${LIB_PATH}"
         cp "${OUTPUT_JAR}" "${LIB_PATH}"
+        # Also copy to build output dir so the exe works when run directly from there
+        OUTPUT_LIB_PATH="bin/Release/${framework}/${os_arch}/lib"
+        mkdir -p "${OUTPUT_LIB_PATH}"
+        cp "${OUTPUT_JAR}" "${OUTPUT_LIB_PATH}"
     done
 
     for os_arch in "${TARGET_OS_ARCHITECTURES[@]}"

@@ -6,7 +6,7 @@ import java.util.Vector;
 public class RlmHandle implements RlmConstants {
     private long handle;
     private boolean previouslyActivated;
-    private static final String defaultLibName = "rlm1501";
+    private static final String defaultLibName = "rlm1603";
     private Vector productHandleList = null;
 
     private static native void rlmPutenv(String str);
